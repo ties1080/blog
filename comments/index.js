@@ -15,7 +15,7 @@ app.get('/posts/:id/comments', (req, res) => {
     res.status(201).send(commentsPostId[req.params.id] || [])
 })
 
-app.post('/posts/:id/comments', async (req,res) => {
+app.post('/posts/:id/comments',  async(req,res) => {
     const commentId = randomBytes(4).toString('hex');
     const {content} = req.body;
 
@@ -25,16 +25,26 @@ app.post('/posts/:id/comments', async (req,res) => {
 
     commentsPostId[req.params.id] = comments;
 
-    await axios.post('https://localhost:4005/events', {
-        type:'CommentCreated',
-        data: {
-            id: commentId,
-            content,
-            postId:req.params.id,
-        }
-    });
+    try{
+        await axios.post('http://localhost:4005/events', {
+            type:'CommentCreated',
+            data: {
+                id: commentId,
+                content,
+                postId:req.params.id,
+            }
+        });
 
-    res.status(201).send(comments);
+        res.status(201).send(comments);
+    }catch (e){
+        res.status(500).send({message: e.toString()})
+    }
+})
+
+app.post('/events', (req,res)=>{
+    const event = req.body;
+    console.log('Received Event on Comment =>', event.type)
+    res.status(201).send({});
 })
 
 
